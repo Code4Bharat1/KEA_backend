@@ -1,5 +1,5 @@
 import Event from '../models/event.models.js';
-import EventRegistration from '../models/eventRegistration.models.js';
+import EventRegistration from '../models/EventRegistration.models.js';
 import { createAdminNotification } from '../utils/createNotification.js';
 
 // Create event
