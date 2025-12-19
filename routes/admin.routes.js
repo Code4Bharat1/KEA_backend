@@ -1,83 +1,198 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import AdminController from '../controllers/admin.controller.js';
 import { auth } from '../middleware/auth.middleware.js';
 import { requireRole } from '../middleware/role.middleware.js';
 
 const router = express.Router();
 
+// =====================
+// RATE LIMITERS
+// =====================
+
+// Standard rate limiter for admin GET requests - 200 requests per 15 minutes
+const adminReadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  message: 'Too many requests from this admin account, please try again after 15 minutes',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: false,
+});
+
+// Moderate rate limiter for admin write operations - 100 requests per 15 minutes
+const adminWriteLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: 'Too many write operations, please slow down',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Strict rate limiter for sensitive operations - 20 requests per 15 minutes
+const adminSensitiveLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: 'Too many sensitive operations, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Very strict rate limiter for critical operations - 5 requests per 15 minutes
+const adminCriticalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: 'Critical operation limit reached, please try again after 15 minutes',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// =====================
+// MIDDLEWARE
+// =====================
+
 router.use(auth);
 router.use(requireRole('admin'));
 
-router.get('/dashboard', AdminController.dashboardStats);
+// =====================
+// DASHBOARD (Read Operations)
+// =====================
 
-// Members routes
-router.get('/members', AdminController.getAllMembers);
-router.get('/members/pending', AdminController.pendingMembers);
-router.get('/members/:id', AdminController.getMemberById);
-router.patch('/members/:id/approve', AdminController.approveMember);
-router.patch('/members/:id/reject', AdminController.rejectMember);
+router.get('/dashboard', adminReadLimiter, AdminController.dashboardStats);
+router.get('/stats', adminReadLimiter, AdminController.getAdminStats);
 
-// Jobs routes
-router.get('/jobs', AdminController.getAllJobs);
-router.get('/jobs/pending', AdminController.pendingJobs);
-router.get('/jobs/:id', AdminController.getJobById);
-router.post('/jobs/approve/:id', AdminController.approveJob);
-router.post('/jobs/reject/:id', AdminController.rejectJob);
+// =====================
+// MEMBERS ROUTES
+// =====================
 
-// Blogs routes
-router.get('/blogs', AdminController.getAllBlogs);
-router.get('/blogs/pending', AdminController.pendingBlogs);
-router.get('/blogs/:id', AdminController.getBlogById);
-router.post('/blogs/approve/:id', AdminController.approveBlog);
-router.post('/blogs/reject/:id', AdminController.rejectBlog);
+// Read operations
+router.get('/members', adminReadLimiter, AdminController.getAllMembers);
+router.get('/members/pending', adminReadLimiter, AdminController.pendingMembers);
+router.get('/members/:id', adminReadLimiter, AdminController.getMemberById);
 
-// Events routes
-router.get('/events', AdminController.getAllEvents);
-router.get('/events/pending', AdminController.pendingEvents);
-router.get('/events/:id', AdminController.getEventById);
-router.post('/events/approve/:id', AdminController.approveEvent);
-router.post('/events/reject/:id', AdminController.rejectEvent);
+// Write operations (approval/rejection)
+router.patch('/members/:id/approve', adminWriteLimiter, AdminController.approveMember);
+router.patch('/members/:id/reject', adminWriteLimiter, AdminController.rejectMember);
 
-// Gallery routes
-router.get('/gallery', AdminController.getAllGallery);
-router.get('/gallery/pending', AdminController.pendingGallery);
-router.post('/gallery/:id/approve', AdminController.approveGallery);
-router.post('/gallery/:id/reject', AdminController.rejectGallery);
-router.delete('/gallery/:id', AdminController.deleteGallery);
+// =====================
+// JOBS ROUTES
+// =====================
 
-// Feedback routes
-router.get('/feedback', AdminController.getAllFeedback);
-router.get('/feedback/pending', AdminController.pendingFeedback);
-router.get('/feedback/:id', AdminController.getFeedbackById);
-router.put('/feedback/:id', AdminController.updateFeedbackStatus);
-router.delete('/feedback/:id', AdminController.deleteFeedback);
+// Read operations
+router.get('/jobs', adminReadLimiter, AdminController.getAllJobs);
+router.get('/jobs/pending', adminReadLimiter, AdminController.pendingJobs);
+router.get('/jobs/:id', adminReadLimiter, AdminController.getJobById);
 
-// Tools routes
-router.get('/tools', AdminController.getAllTools);
-router.get('/tools/:id', AdminController.getToolById);
-router.delete('/tools/:id', AdminController.deleteTool);
+// Write operations
+router.post('/jobs/approve/:id', adminWriteLimiter, AdminController.approveJob);
+router.post('/jobs/reject/:id', adminWriteLimiter, AdminController.rejectJob);
 
-// Resources (Knowledge Hub) routes
-router.get('/resources', AdminController.getAllResources);
-router.get('/resources/:id', AdminController.getResourceById);
-router.delete('/resources/:id', AdminController.deleteResource);
+// =====================
+// BLOGS ROUTES
+// =====================
 
-// Seminars routes
-router.get('/seminars', AdminController.getAllSeminars);
-router.get('/seminars/:id', AdminController.getSeminarById);
-router.delete('/seminars/:id', AdminController.deleteSeminar);
+// Read operations
+router.get('/blogs', adminReadLimiter, AdminController.getAllBlogs);
+router.get('/blogs/pending', adminReadLimiter, AdminController.pendingBlogs);
+router.get('/blogs/:id', adminReadLimiter, AdminController.getBlogById);
 
-// Profile routes
-router.get('/profile', AdminController.getAdminProfile);
-router.patch('/profile', AdminController.updateAdminProfile);
-router.patch('/change-password', AdminController.changePassword);
-router.get('/stats', AdminController.getAdminStats);
+// Write operations
+router.post('/blogs/approve/:id', adminWriteLimiter, AdminController.approveBlog);
+router.post('/blogs/reject/:id', adminWriteLimiter, AdminController.rejectBlog);
 
-// Settings routes
-router.get('/settings', AdminController.getSettings);
-router.patch('/settings', AdminController.updateSettings);
-router.post('/backup', AdminController.createBackup);
-router.post('/restore', AdminController.restoreBackup);
-router.post('/test-email', AdminController.sendTestEmail);
+// =====================
+// EVENTS ROUTES
+// =====================
+
+// Read operations
+router.get('/events', adminReadLimiter, AdminController.getAllEvents);
+router.get('/events/pending', adminReadLimiter, AdminController.pendingEvents);
+router.get('/events/:id', adminReadLimiter, AdminController.getEventById);
+
+// Write operations
+router.post('/events/approve/:id', adminWriteLimiter, AdminController.approveEvent);
+router.post('/events/reject/:id', adminWriteLimiter, AdminController.rejectEvent);
+
+// =====================
+// GALLERY ROUTES
+// =====================
+
+// Read operations
+router.get('/gallery', adminReadLimiter, AdminController.getAllGallery);
+router.get('/gallery/pending', adminReadLimiter, AdminController.pendingGallery);
+
+// Write operations
+router.post('/gallery/:id/approve', adminWriteLimiter, AdminController.approveGallery);
+router.post('/gallery/:id/reject', adminWriteLimiter, AdminController.rejectGallery);
+router.delete('/gallery/:id', adminWriteLimiter, AdminController.deleteGallery);
+
+// =====================
+// FEEDBACK ROUTES
+// =====================
+
+// Read operations
+router.get('/feedback', adminReadLimiter, AdminController.getAllFeedback);
+router.get('/feedback/pending', adminReadLimiter, AdminController.pendingFeedback);
+router.get('/feedback/:id', adminReadLimiter, AdminController.getFeedbackById);
+
+// Write operations
+router.put('/feedback/:id', adminWriteLimiter, AdminController.updateFeedbackStatus);
+router.delete('/feedback/:id', adminWriteLimiter, AdminController.deleteFeedback);
+
+// =====================
+// TOOLS ROUTES
+// =====================
+
+// Read operations
+router.get('/tools', adminReadLimiter, AdminController.getAllTools);
+router.get('/tools/:id', adminReadLimiter, AdminController.getToolById);
+
+// Write operations
+router.delete('/tools/:id', adminWriteLimiter, AdminController.deleteTool);
+
+// =====================
+// RESOURCES (KNOWLEDGE HUB) ROUTES
+// =====================
+
+// Read operations
+router.get('/resources', adminReadLimiter, AdminController.getAllResources);
+router.get('/resources/:id', adminReadLimiter, AdminController.getResourceById);
+
+// Write operations
+router.delete('/resources/:id', adminWriteLimiter, AdminController.deleteResource);
+
+// =====================
+// SEMINARS ROUTES
+// =====================
+
+// Read operations
+router.get('/seminars', adminReadLimiter, AdminController.getAllSeminars);
+router.get('/seminars/:id', adminReadLimiter, AdminController.getSeminarById);
+
+// Write operations
+router.delete('/seminars/:id', adminWriteLimiter, AdminController.deleteSeminar);
+
+// =====================
+// PROFILE ROUTES (Sensitive)
+// =====================
+
+router.get('/profile', adminReadLimiter, AdminController.getAdminProfile);
+router.patch('/profile', adminSensitiveLimiter, AdminController.updateAdminProfile);
+router.patch('/change-password', adminSensitiveLimiter, AdminController.changePassword);
+
+// =====================
+// SETTINGS ROUTES (Sensitive)
+// =====================
+
+router.get('/settings', adminReadLimiter, AdminController.getSettings);
+router.patch('/settings', adminSensitiveLimiter, AdminController.updateSettings);
+
+// =====================
+// CRITICAL OPERATIONS (Very Restricted)
+// =====================
+
+router.post('/backup', adminCriticalLimiter, AdminController.createBackup);
+router.post('/restore', adminCriticalLimiter, AdminController.restoreBackup);
+router.post('/test-email', adminSensitiveLimiter, AdminController.sendTestEmail);
 
 export default router;
