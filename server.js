@@ -41,8 +41,8 @@ app.use(
       "http:localhost:3001",
       "https://kea-user.vercel.app",
       "https://kea-admin.vercel.app",
-      "https://admin.kea.nexcorealliance.com/",
-      "https://user.kea.nexcorealliance.com/",
+      "https://admin.kea.nexcorealliance.com",
+      "https://user.kea.nexcorealliance.com",
     ],
     credentials: true,
   })
