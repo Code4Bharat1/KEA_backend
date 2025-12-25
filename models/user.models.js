@@ -1,3 +1,286 @@
+// import mongoose from "mongoose";
+// import bcrypt from "bcryptjs";
+
+// const EducationSchema = new mongoose.Schema(
+//   {
+//     institution: String,
+//     degree: String,
+//     from: Date,
+//     to: Date,
+//   },
+//   { _id: false }
+// );
+
+// const ExperienceSchema = new mongoose.Schema(
+//   {
+//     company: String,
+//     position: String,
+//     from: Date,
+//     to: Date,
+//     description: String,
+//   },
+//   { _id: false }
+// );
+
+// const ProfileSchema = new mongoose.Schema(
+//   {
+//     headline: String,
+//     bio: String,
+//     phone: String,
+//     location: String,
+//     skills: [String],
+//     education: [EducationSchema],
+//     experience: [ExperienceSchema],
+//     position: String, // ✅ REQUIRED
+//     socialLinks: {
+//       linkedin: String,
+//       twitter: String,
+//       facebook: String,
+//       instagram: String,
+//       website: String,
+//     },
+//     company: String, // ✅ REQUIRED
+//     yearsOfExperience: String, // ✅ REQUIRED
+//     avatar: String,
+//   },
+//   { _id: false }
+// );
+
+// const UserSchema = new mongoose.Schema({
+//   name: { type: String, required: true },
+//   email: { type: String, required: true, unique: true },
+//   password: { type: String, required: true },
+
+//   role: {
+//     type: String,
+//     enum: ["user", "admin"],
+//     default: "user",
+//   },
+
+//   profile: ProfileSchema,
+
+//   memberId: {
+//     type: String,
+//     unique: true,
+//     sparse: true,
+//   },
+
+//   membershipStatus: {
+//     type: String,
+//     enum: ["pending", "active", "rejected"],
+//     default: "pending",
+//   },
+
+//   createdAt: { type: Date, default: Date.now },
+// });
+
+// /*  
+// ===========================================================
+//   SINGLE PRE-SAVE HOOK  (Correct)
+// ===========================================================
+// */
+// UserSchema.pre("save", async function () {
+//   // 1️⃣ Hash password
+//   if (this.isModified("password")) {
+//     const salt = await bcrypt.genSalt(10);
+//     this.password = await bcrypt.hash(this.password, salt);
+//   }
+
+//   // 2️⃣ Generate Member ID for new users
+//   if (this.isNew && !this.memberId) {
+//     const lastUser = await this.constructor.findOne(
+//       { memberId: { $exists: true } },
+//       {},
+//       { sort: { createdAt: -1 } }
+//     );
+
+//     let nextNumber = 1;
+
+//     if (lastUser?.memberId) {
+//       const lastNum = parseInt(lastUser.memberId.replace("KEA-", ""));
+//       nextNumber = lastNum + 1;
+//     }
+
+//     this.memberId = `KEA-${String(nextNumber).padStart(3, "0")}`;
+//   }
+// });
+
+// // Compare password
+// UserSchema.methods.comparePassword = function (candidatePassword) {
+//   return bcrypt.compare(candidatePassword, this.password);
+// };
+
+// export default mongoose.model("User", UserSchema);
+
+
+// import mongoose from "mongoose";
+// import bcrypt from "bcryptjs";
+
+// const EducationSchema = new mongoose.Schema(
+//   {
+//     institution: String,
+//     degree: String,
+//     from: Date,
+//     to: Date,
+//   },
+//   { _id: false }
+// );
+
+// const ExperienceSchema = new mongoose.Schema(
+//   {
+//     company: String,
+//     position: String,
+//     from: Date,
+//     to: Date,
+//     description: String,
+//   },
+//   { _id: false }
+// );
+
+// const ProfileSchema = new mongoose.Schema(
+//   {
+//     headline: String,
+//     bio: String,
+//     phone: String,
+//     countryCode: {
+//       type: String,
+//       default: '+91'
+//     },
+//     location: String,
+//     nativeAddition: String, // ✅ NEW: Native to be add under profile
+//     category: {
+//       type: String,
+//       enum: [
+//         'Software Engineering',
+//         'Civil Engineering',
+//         'Mechanical Engineering',
+//         'Electrical Engineering',
+//         'Electronics Engineering',
+//         'Chemical Engineering',
+//         'Computer Engineering',
+//         'Architecture',
+//         'Other'
+//       ]
+//     }, // ✅ NEW: Category dropdown
+//     country: {
+//       type: String,
+//       default: 'IN'
+//     }, // ✅ NEW: Country field
+//     branch: {
+//       type: String,
+//       default: 'Bangalore'
+//     },
+//     skills: [String],
+//     education: [EducationSchema],
+//     experience: [ExperienceSchema],
+//     position: String,
+//     socialLinks: {
+//       linkedin: String,
+//       github: String,
+//       twitter: String,
+//       facebook: String,
+//       instagram: String,
+//       website: String,
+//     },
+//     company: String,
+//     yearsOfExperience: String,
+//     avatar: String,
+//     resumeUrl: String, // ✅ NEW: Resume URL field
+//   },
+//   { _id: false }
+// );
+
+// const UserSchema = new mongoose.Schema({
+//   name: { type: String, required: true },
+//   email: { type: String, required: true, unique: true },
+//   password: { type: String, required: true },
+
+//   role: {
+//     type: String,
+//     enum: ["user", "admin"],
+//     default: "user",
+//   },
+
+//   avatar: String, // Top level avatar for backward compatibility
+
+//   profile: ProfileSchema,
+
+//   memberId: {
+//     type: String,
+//     unique: true,
+//     sparse: true,
+//   },
+
+//   membershipStatus: {
+//     type: String,
+//     enum: ["pending", "active", "rejected"],
+//     default: "pending",
+//   },
+
+//   createdAt: { type: Date, default: Date.now },
+//   updatedAt: { type: Date, default: Date.now },
+// });
+
+// /*  
+// ===========================================================
+//   SINGLE PRE-SAVE HOOK  (Correct)
+// ===========================================================
+// */
+// UserSchema.pre("save", async function () {
+//   // 1️⃣ Update timestamp
+//   this.updatedAt = Date.now();
+
+//   // 2️⃣ Hash password
+//   if (this.isModified("password")) {
+//     const salt = await bcrypt.genSalt(10);
+//     this.password = await bcrypt.hash(this.password, salt);
+//   }
+
+//   // 3️⃣ Generate Member ID for new users
+//   if (this.isNew && !this.memberId) {
+//     const lastUser = await this.constructor.findOne(
+//       { memberId: { $exists: true } },
+//       {},
+//       { sort: { createdAt: -1 } }
+//     );
+
+//     let nextNumber = 1;
+
+//     if (lastUser?.memberId) {
+//       const lastNum = parseInt(lastUser.memberId.replace("KEA-", ""));
+//       nextNumber = lastNum + 1;
+//     }
+
+//     this.memberId = `KEA-${String(nextNumber).padStart(3, "0")}`;
+//   }
+
+//   // 4️⃣ Sync top-level avatar with profile avatar
+//   if (this.isModified('profile.avatar')) {
+//     this.avatar = this.profile.avatar;
+//   }
+// });
+
+// // Compare password
+// UserSchema.methods.comparePassword = function (candidatePassword) {
+//   return bcrypt.compare(candidatePassword, this.password);
+// };
+
+// // Index for better search performance
+// UserSchema.index({ 
+//   name: 'text', 
+//   'profile.headline': 'text', 
+//   'profile.bio': 'text',
+//   'profile.nativeAddition': 'text'
+// });
+
+// UserSchema.index({ 'profile.category': 1 });
+// UserSchema.index({ 'profile.country': 1 });
+// UserSchema.index({ 'profile.location': 1 });
+// UserSchema.index({ membershipStatus: 1 });
+
+// export default mongoose.model("User", UserSchema);
+
+
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
@@ -27,21 +310,44 @@ const ProfileSchema = new mongoose.Schema(
     headline: String,
     bio: String,
     phone: String,
+    countryCode: {
+      type: String,
+      default: '+91'
+    },
     location: String,
+    nativeAddition: String, // ✅ NEW: Native to be add under profile
+    category: {
+      type: String,
+      default: ''
+    },
+    otherCategory: {
+      type: String,
+      default: ''
+    }, // ✅ Store custom "Other" category text
+    country: {
+      type: String,
+      default: 'IN'
+    }, // ✅ NEW: Country field
+    branch: {
+      type: String,
+      default: 'Bangalore'
+    },
     skills: [String],
     education: [EducationSchema],
     experience: [ExperienceSchema],
-    position: String, // ✅ REQUIRED
+    position: String,
     socialLinks: {
       linkedin: String,
+      github: String,
       twitter: String,
       facebook: String,
       instagram: String,
       website: String,
     },
-    company: String, // ✅ REQUIRED
-    yearsOfExperience: String, // ✅ REQUIRED
+    company: String,
+    yearsOfExperience: String,
     avatar: String,
+    resumeUrl: String, // ✅ NEW: Resume URL field
   },
   { _id: false }
 );
@@ -56,6 +362,8 @@ const UserSchema = new mongoose.Schema({
     enum: ["user", "admin"],
     default: "user",
   },
+
+  avatar: String, // Top level avatar for backward compatibility
 
   profile: ProfileSchema,
 
@@ -72,6 +380,7 @@ const UserSchema = new mongoose.Schema({
   },
 
   createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 });
 
 /*  
@@ -80,13 +389,16 @@ const UserSchema = new mongoose.Schema({
 ===========================================================
 */
 UserSchema.pre("save", async function () {
-  // 1️⃣ Hash password
+  // 1️⃣ Update timestamp
+  this.updatedAt = Date.now();
+
+  // 2️⃣ Hash password
   if (this.isModified("password")) {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
   }
 
-  // 2️⃣ Generate Member ID for new users
+  // 3️⃣ Generate Member ID for new users
   if (this.isNew && !this.memberId) {
     const lastUser = await this.constructor.findOne(
       { memberId: { $exists: true } },
@@ -103,11 +415,29 @@ UserSchema.pre("save", async function () {
 
     this.memberId = `KEA-${String(nextNumber).padStart(3, "0")}`;
   }
+
+  // 4️⃣ Sync top-level avatar with profile avatar
+  if (this.isModified('profile.avatar')) {
+    this.avatar = this.profile.avatar;
+  }
 });
 
 // Compare password
 UserSchema.methods.comparePassword = function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
+
+// Index for better search performance
+UserSchema.index({ 
+  name: 'text', 
+  'profile.headline': 'text', 
+  'profile.bio': 'text',
+  'profile.nativeAddition': 'text'
+});
+
+UserSchema.index({ 'profile.category': 1 });
+UserSchema.index({ 'profile.country': 1 });
+UserSchema.index({ 'profile.location': 1 });
+UserSchema.index({ membershipStatus: 1 });
 
 export default mongoose.model("User", UserSchema);
